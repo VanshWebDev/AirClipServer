@@ -1,0 +1,9 @@
+*.log
+node_modules/
+/node_modules
+
+TODO.txt
+
+.env
+./.env
+/.env
