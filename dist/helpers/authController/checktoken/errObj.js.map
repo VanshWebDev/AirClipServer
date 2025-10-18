@@ -1,0 +1,1 @@
+{"version":3,"file":"errObj.js","sourceRoot":"","sources":["../../../../src/helpers/authController/checktoken/errObj.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,MAAM,aAAa,GAAG;IAC3B,MAAM,EAAE,GAAG;IACX,OAAO,EAAE,mBAAmB;IAC5B,WAAW,EAAE,IAAI;CAClB,CAAC;AAEF,MAAM,CAAC,MAAM,mBAAmB,GAAG;IACjC,MAAM,EAAE,GAAG;IACX,OAAO,EAAE,gBAAgB;IACzB,WAAW,EAAE,IAAI;CAClB,CAAC"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"errObj.js","sourceRoot":"","sources":["../../../../src/helpers/authController/signupWithGoogle/errObj.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,MAAM,wBAAwB,GAAG;IACpC,MAAM,EAAE,GAAG;IACX,OAAO,EAAC,oCAAoC;IAC5C,WAAW,EAAE,IAAI;CACpB,CAAA;AACD,MAAM,CAAC,MAAM,kBAAkB,GAAG;IAC9B,MAAM,EAAE,GAAG;IACX,OAAO,EAAC,oCAAoC;IAC5C,WAAW,EAAE,IAAI;CACpB,CAAA"}
