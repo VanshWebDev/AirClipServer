@@ -1,0 +1,1 @@
+{"version":3,"file":"AirClipErr.d.ts","sourceRoot":"","sources":["../../../src/utils/error/AirClipErr.ts"],"names":[],"mappings":"AAAA;;;GAGG;AACH,qBAAa,UAAW,SAAQ,KAAK;IACnC,MAAM,EAAE,MAAM,CAAC;IACf,WAAW,EAAE,OAAO,CAAC;IAErB;;;;;;;OAOG;gBAES,MAAM,EAAE;QAClB,MAAM,EAAE,MAAM,CAAC;QACf,OAAO,EAAE,MAAM,CAAC;QAChB,WAAW,EAAE,OAAO,CAAC;KACtB;CAOF"}

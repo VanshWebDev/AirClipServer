@@ -1,0 +1,1 @@
+{"version":3,"file":"resObj.js","sourceRoot":"","sources":["../../../../src/helpers/authController/verifyOtpForSignup/resObj.ts"],"names":[],"mappings":"AAAA,MAAM,CAAC,MAAM,UAAU,GAAG;IACxB,UAAU,EAAE,GAAG;IACf,IAAI,EAAE;QACJ,OAAO,EAAE,iBAAiB;QAC1B,OAAO,EAAE,IAAI;KACd;CACF,CAAC"}
