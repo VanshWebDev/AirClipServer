@@ -6,12 +6,12 @@ const frontendUrl = process.env.FRONTEND_URL || "https://airclip.netlify.app";
 const frontendUrlForDevelopment = process.env.FRONTEND_URL_FOR_DEVELOPMENT || "";
 export const corsOptions = {
     credentials: true,
-    origin: [frontendUrl, frontendUrlForDevelopment],
+    origin: [frontendUrl, frontendUrlForDevelopment, "http://192.168.43.139:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 };
 export const socketIoOptions = {
-    origin: "http://localhost:5173",
+    origin: [frontendUrl, "http://192.168.43.139:5173"],
     methods: ["GET", "POST"],
     credentials: true,
 };
