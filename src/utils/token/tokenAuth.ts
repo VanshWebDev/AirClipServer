@@ -38,6 +38,7 @@ interface UserData {
   username: string;
   name?: string;
   profilePicture: string;
+  _id: string;
 }
 export const tokenAuth = async (
   req: Request,

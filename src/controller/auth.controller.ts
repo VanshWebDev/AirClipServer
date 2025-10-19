@@ -10,6 +10,7 @@ import { AirClipErr } from "../utils/error/AirClipErr.js";
 
 //npm packeges
 import bcrypt from "bcrypt";
+import type { JwtPayload } from "jsonwebtoken";
 
 //Error objects
 import {
@@ -41,6 +42,7 @@ import {
   forgetpwdIfUsername,
   forgetpwdIfUserNot,
 } from "../helpers/authController/forgetPwd/errObj.js";
+import { checkTokenErr, checkTokenIfUserNot } from "../helpers/authController/checktoken/errObj.js";
 
 //response objects
 import { resIfPasswordMatch } from "../helpers/authController/login/resObj.js";
@@ -71,6 +73,10 @@ import {
   sendResponse,
 } from "../utils/reusable/otpService.js";
 import { extractUsernameFromEmail } from "../helpers/authController/signupWithEmail/signupWithEmailFunc.js";
+import { decryptJwt } from "../utils/token/crypt.utils.js";
+import { getUser, resIfUserObj } from "../helpers/authController/checktoken/checktokenFunc.js";
+
+const cryptoSecret = process.env.CRYPTO_SECRET || "";
 
 export const login = async (req: Rq, res: Rs) => {
   let { emailOrUsername, password } = req.body;
@@ -108,6 +114,7 @@ export const login = async (req: Rq, res: Rs) => {
         username: checkuser.username,
         name: checkuser.name ?? "",
         profilePicture: checkuser.profilePicture ?? "",
+        _id: checkuser._id.toString(),
       };
 
       tokenAuth(req, res, tokenObj, resIfPasswordMatch, userData);
@@ -185,6 +192,7 @@ export const signupWithEmail = async (req: Rq, res: Rs) => {
     username: newUser.username,
     name: newUser.name ?? "",
     profilePicture: newUser.profilePicture ?? "",
+    _id: newUser._id.toString(),
   };
 
   tokenAuth(req, res, tokenObj, ifUserCreatedSuccessfully, userData);
@@ -221,6 +229,7 @@ export const signupWithGoogle = async (req: Rq, res: Rs) => {
       username: user.username,
       name: user.name ?? "",
       profilePicture: user.profilePicture ?? "",
+      _id: user._id.toString(),
     };
 
     return tokenAuth(req, res, tokenPayload, ifUserExistSignin, userData);
@@ -243,6 +252,7 @@ export const signupWithGoogle = async (req: Rq, res: Rs) => {
     username: newUser.username,
     name: newUser.name ?? "",
     profilePicture: newUser.profilePicture ?? "",
+    _id: newUser._id.toString(),
   };
 
   if (newUser) {
@@ -304,7 +314,28 @@ export const verifyOtp = async (req: Rq, res: Rs) => {
     username: updatedUser.username,
     name: updatedUser.name ?? "",
     profilePicture: updatedUser.profilePicture ?? "",
+    _id: updatedUser._id.toString(),
   };
 
   tokenAuth(req, res, tokenPayload, verifyotpIfPwdSuccessfullyReset, userData);
+};
+
+export const checkToken = async (req: Rq, res: Rs) => { // done🟢
+  const token = req.signedCookies.token;
+
+  if (!token) throw new AirClipErr(checkTokenErr); //Error if token not found in frontend.
+
+  const payload = decryptJwt(token, cryptoSecret) as JwtPayload;
+
+  const { _id } = payload;
+
+  // if (checkIfMail(payload.email)) user = await getUserIfEamil(email);
+  //
+  // else user = await getUserIfUsername(email);
+
+  const user = await getUser(_id);
+
+  if (!user) throw new AirClipErr(checkTokenIfUserNot);
+  //
+  else sendRes(res, resIfUserObj(user));
 };

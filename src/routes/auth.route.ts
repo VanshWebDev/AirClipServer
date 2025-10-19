@@ -1,6 +1,7 @@
 import express from "express";
 import { routeWrapper } from "../utils/error/routeWrapper.js";
 import {
+  checkToken,
   forgetpassword,
   login,
   sendOtp,
@@ -25,4 +26,6 @@ router.post("/signupwithgoogle", routeWrapper(signupWithGoogle));
 router.post("/forget-pwd", routeWrapper(forgetpassword));
 
 router.post("/verify-otp", routeWrapper(verifyOtp));
+
+router.get("/checktoken", routeWrapper(checkToken));
 export default router;
