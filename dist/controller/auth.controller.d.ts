@@ -6,4 +6,5 @@ export declare const signupWithEmail: (req: Rq, res: Rs) => Promise<void>;
 export declare const signupWithGoogle: (req: Rq, res: Rs) => Promise<void>;
 export declare const forgetpassword: (req: Rq, res: Rs) => Promise<void>;
 export declare const verifyOtp: (req: Rq, res: Rs) => Promise<void>;
+export declare const checkToken: (req: Rq, res: Rs) => Promise<void>;
 //# sourceMappingURL=auth.controller.d.ts.map

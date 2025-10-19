@@ -2,7 +2,7 @@ import { type CorsOptions } from "cors";
 import { type CookieOptions } from "express";
 export declare const corsOptions: CorsOptions;
 export declare const socketIoOptions: {
-    origin: string;
+    origin: string[];
     methods: string[];
     credentials: boolean;
 };

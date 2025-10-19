@@ -14,6 +14,7 @@ import { ifBothPwdNotEqual, ifUserExist, wrongEmailProvided, } from "../helpers/
 import { ifGooglePayloadNot } from "../helpers/authController/signupWithGoogle/errObj.js";
 import { ifPwdNotEqual, ifUserResetingPwdNotFound, } from "../helpers/authController/verifyOtp/errObj.js";
 import { forgetpwdIfUsername, forgetpwdIfUserNot, } from "../helpers/authController/forgetPwd/errObj.js";
+import { checkTokenErr, checkTokenIfUserNot } from "../helpers/authController/checktoken/errObj.js";
 //response objects
 import { resIfPasswordMatch } from "../helpers/authController/login/resObj.js";
 import { resIfEmailSent } from "../helpers/authController/sendOpt/resObj.js";
@@ -27,9 +28,11 @@ import { checkIfMail, getPayloadFromGoogle, sendRes, } from "../utils/reusable/r
 import { tokenAuth } from "../utils/token/tokenAuth.js";
 import { generateOtp, saveOtp, sendEmail, sendResponse, } from "../utils/reusable/otpService.js";
 import { extractUsernameFromEmail } from "../helpers/authController/signupWithEmail/signupWithEmailFunc.js";
+import { decryptJwt } from "../utils/token/crypt.utils.js";
+import { getUser, resIfUserObj } from "../helpers/authController/checktoken/checktokenFunc.js";
+const cryptoSecret = process.env.CRYPTO_SECRET || "";
 export const login = async (req, res) => {
     let { emailOrUsername, password } = req.body;
-    console.log(req.body);
     emailOrUsername = emailOrUsername.toLowerCase();
     let checkuser;
     if (checkIfMail(emailOrUsername)) {
@@ -58,6 +61,7 @@ export const login = async (req, res) => {
                 username: checkuser.username,
                 name: checkuser.name ?? "",
                 profilePicture: checkuser.profilePicture ?? "",
+                _id: checkuser._id.toString(),
             };
             tokenAuth(req, res, tokenObj, resIfPasswordMatch, userData);
         }
@@ -118,6 +122,7 @@ export const signupWithEmail = async (req, res) => {
         username: newUser.username,
         name: newUser.name ?? "",
         profilePicture: newUser.profilePicture ?? "",
+        _id: newUser._id.toString(),
     };
     tokenAuth(req, res, tokenObj, ifUserCreatedSuccessfully, userData);
     await VerifyEmailOtp.deleteOne({ email });
@@ -146,6 +151,7 @@ export const signupWithGoogle = async (req, res) => {
             username: user.username,
             name: user.name ?? "",
             profilePicture: user.profilePicture ?? "",
+            _id: user._id.toString(),
         };
         return tokenAuth(req, res, tokenPayload, ifUserExistSignin, userData);
     }
@@ -163,6 +169,7 @@ export const signupWithGoogle = async (req, res) => {
         username: newUser.username,
         name: newUser.name ?? "",
         profilePicture: newUser.profilePicture ?? "",
+        _id: newUser._id.toString(),
     };
     if (newUser) {
         tokenAuth(req, res, tokenPayload, ifSignupSuccessWithGoogle, userData);
@@ -204,7 +211,24 @@ export const verifyOtp = async (req, res) => {
         username: updatedUser.username,
         name: updatedUser.name ?? "",
         profilePicture: updatedUser.profilePicture ?? "",
+        _id: updatedUser._id.toString(),
     };
     tokenAuth(req, res, tokenPayload, verifyotpIfPwdSuccessfullyReset, userData);
+};
+export const checkToken = async (req, res) => {
+    const token = req.signedCookies.token;
+    if (!token)
+        throw new AirClipErr(checkTokenErr); //Error if token not found in frontend.
+    const payload = decryptJwt(token, cryptoSecret);
+    const { _id } = payload;
+    // if (checkIfMail(payload.email)) user = await getUserIfEamil(email);
+    //
+    // else user = await getUserIfUsername(email);
+    const user = await getUser(_id);
+    if (!user)
+        throw new AirClipErr(checkTokenIfUserNot);
+    //
+    else
+        sendRes(res, resIfUserObj(user));
 };
 //# sourceMappingURL=auth.controller.js.map

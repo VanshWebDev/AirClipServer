@@ -29,6 +29,7 @@ interface UserData {
     username: string;
     name?: string;
     profilePicture: string;
+    _id: string;
 }
 export declare const tokenAuth: (req: Request, res: Response, payload: TokenPayload, otherInfo: otherInfo, userData: UserData, forWhat?: string) => Promise<void>;
 export {};
