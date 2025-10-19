@@ -25,7 +25,7 @@ app.use(cors(corsOptions));
 app.use(express.json()); // For parsing JSON bodies
 app.use(cookieParser(cookieSecret));
 //Initialize Socket.IO
-const io = new Server(server, { cors: corsOptions });
+const io = new Server(server, { cors: corsOptions, transports: ['websocket', 'polling'] });
 initializeSocketIO(io); // Pass the 'io' instance to the handler
 
 const port = Number(process.env.PORT) || 4000;
