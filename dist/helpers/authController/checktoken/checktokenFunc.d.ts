@@ -19,14 +19,14 @@ export declare const resIfUserObj: (user: user) => {
     };
 };
 export declare const getUser: (id: mongoose.Types.ObjectId) => Promise<(mongoose.Document<unknown, {}, {
-    email: string;
     username: string;
+    email: string;
     profilePicture: string;
     name?: string | null;
     password?: string | null;
 }, {}, mongoose.DefaultSchemaOptions> & {
-    email: string;
     username: string;
+    email: string;
     profilePicture: string;
     name?: string | null;
     password?: string | null;
