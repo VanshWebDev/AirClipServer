@@ -261,8 +261,10 @@ export const signupWithGoogle = async (req: Rq, res: Rs) => {
 };
 
 export const forgetpassword = async (req: Rq, res: Rs) => {
-  // done🟢
-  const { emailOrUsername } = req.body;
+  // Get emailOrUsername and convert to lowercase immediately
+  const emailOrUsername = (req.body.emailOrUsername as string)?.toLowerCase();
+
+  console.log(emailOrUsername)
 
   let isEmail = checkIfMail(emailOrUsername);
 

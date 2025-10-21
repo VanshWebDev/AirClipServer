@@ -26,6 +26,10 @@ initializeSocketIO(io); // Pass the 'io' instance to the handler
 const port = Number(process.env.PORT) || 4000;
 //routes
 app.use("/api/auth", authRoute);
+// Health check endpoint for uptime monitor
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok' });
+});
 // Error Handling Middleware
 app.use(errHandlerMiddleware);
 server.listen(port, () => {
