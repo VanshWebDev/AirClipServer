@@ -3,7 +3,7 @@ import { Server, Socket } from "socket.io";
 
 // New Map: Stores user details for each socket ID
 // e.g., { 'socketIdABC': { userId: '123', username: 'Vansh' } }
-const socketToUser = new Map<string, { userId: string, username: string }>();
+const socketToUser = new Map<string, { userId: string, username: string, deviceInfo: string }>();
 
 export const initializeSocketIO = (io: Server) => {
   // Helper function to get a list of user details for a given room
@@ -20,8 +20,8 @@ export const initializeSocketIO = (io: Server) => {
     console.log(`✅ User connected: ${socket.id}`);
 
     // A. When a user registers, store their details and join their personal room
-    socket.on("register_user", ({ userId, username }) => {
-      socketToUser.set(socket.id, { userId, username });
+    socket.on("register_user", ({ userId, username, deviceInfo }) => {
+      socketToUser.set(socket.id, { userId, username, deviceInfo });
       socket.join(userId);
       console.log(`Socket ${socket.id} (${username}) joined personal room: ${userId}`);
     });
@@ -29,14 +29,7 @@ export const initializeSocketIO = (io: Server) => {
     // B. When a user joins a custom room
     socket.on("join_room", (roomName: string) => {
       // Find and leave the previous custom room
-      console.log("Socket rooms: ",Array.from(socket.rooms))
-      Array.from(socket.rooms).find((room) => {
-        console.log("room: ",room)
-        console.log("socket.id: ", socket.id)
-        room !== socket.id && !mongoose.Types.ObjectId.isValid(room)
-      });
       const previousRoom = Array.from(socket.rooms).find(room => room !== socket.id && !mongoose.Types.ObjectId.isValid(room));
-      console.log("previous room: " ,previousRoom)
       if (previousRoom) {
         socket.leave(previousRoom);
         console.log(`Socket ${socket.id} left room: ${previousRoom}`);
@@ -61,6 +54,7 @@ export const initializeSocketIO = (io: Server) => {
         content: content,
         senderId: socket.id,
         senderUsername: sender?.username || 'Anonymous', // Include username
+        deviceInfo: sender?.deviceInfo,
       };
       
       io.to(room).emit("receive_clipboard_item", messagePayload);

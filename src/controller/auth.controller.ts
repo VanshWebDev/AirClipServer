@@ -264,8 +264,6 @@ export const forgetpassword = async (req: Rq, res: Rs) => {
   // Get emailOrUsername and convert to lowercase immediately
   const emailOrUsername = (req.body.emailOrUsername as string)?.toLowerCase();
 
-  console.log(emailOrUsername)
-
   let isEmail = checkIfMail(emailOrUsername);
 
   if (!isEmail) throw new AirClipErr(forgetpwdIfUsername);
