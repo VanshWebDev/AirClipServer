@@ -178,7 +178,6 @@ export const signupWithGoogle = async (req, res) => {
 export const forgetpassword = async (req, res) => {
     // Get emailOrUsername and convert to lowercase immediately
     const emailOrUsername = req.body.emailOrUsername?.toLowerCase();
-    console.log(emailOrUsername);
     let isEmail = checkIfMail(emailOrUsername);
     if (!isEmail)
         throw new AirClipErr(forgetpwdIfUsername);
