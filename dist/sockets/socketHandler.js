@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Server, Socket } from "socket.io";
+import { ClipboardItem } from "../models/clipboard.model.js";
 // New Map: Stores user details for each socket ID
 // e.g., { 'socketIdABC': { userId: '123', username: 'Vansh' } }
 const socketToUser = new Map();
@@ -16,8 +17,8 @@ export const initializeSocketIO = (io) => {
     io.on("connection", (socket) => {
         console.log(`✅ User connected: ${socket.id}`);
         // A. When a user registers, store their details and join their personal room
-        socket.on("register_user", ({ userId, username, deviceInfo }) => {
-            socketToUser.set(socket.id, { userId, username, deviceInfo });
+        socket.on("register_user", ({ userId, username, senderDeviceInfo }) => {
+            socketToUser.set(socket.id, { userId, username, senderDeviceInfo });
             socket.join(userId);
             console.log(`Socket ${socket.id} (${username}) joined personal room: ${userId}`);
         });
@@ -38,16 +39,29 @@ export const initializeSocketIO = (io) => {
             io.to(roomName).emit('update_room_users', getUsersInRoom(roomName));
         });
         // C. Handle sending clipboard items
-        socket.on("send_clipboard_item", (item) => {
+        socket.on("send_clipboard_item", async (item) => {
+            console.log('working');
             const { content, room } = item;
             const sender = socketToUser.get(socket.id);
+            if (!sender)
+                return; // Don't process if sender is not registered
+            // --- SAVE TO DATABASE ---
+            const newItem = new ClipboardItem({
+                content,
+                room,
+                senderId: sender.userId,
+                senderUsername: sender.username,
+                senderDeviceInfo: sender.senderDeviceInfo,
+            });
+            await newItem.save();
             const messagePayload = {
-                id: new mongoose.Types.ObjectId().toString(),
+                id: newItem._id,
                 content: content,
                 senderId: socket.id,
                 senderUsername: sender?.username || 'Anonymous', // Include username
-                deviceInfo: sender?.deviceInfo,
+                senderDeviceInfo: sender?.senderDeviceInfo,
             };
+            console.log('working 2');
             io.to(room).emit("receive_clipboard_item", messagePayload);
         });
         // D. When a user disconnects, notify all relevant rooms
