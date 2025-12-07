@@ -6,9 +6,10 @@ import connectDB from "./config/db.js";
 import { initializeSocketIO } from "./sockets/socketHandler.js";
 import cors from "cors";
 import { corsOptions } from "./constant/optionObj/optionObj.js";
-import authRoute from "./routes/auth.route.js";
+import authRoutes from "./routes/auth.route.js";
 import { errHandlerMiddleware } from "./middleware/errHandler.middleware.js";
 import cookieParser from "cookie-parser";
+import socketRoutes from "./routes/socket.route.js";
 dotenv.config();
 
 // Environment variable
@@ -25,17 +26,20 @@ app.use(cors(corsOptions));
 app.use(express.json()); // For parsing JSON bodies
 app.use(cookieParser(cookieSecret));
 //Initialize Socket.IO
-const io = new Server(server, { cors: corsOptions, transports: ['websocket', 'polling'] });
+const io = new Server(server, {
+  cors: corsOptions,
+  transports: ["websocket", "polling"],
+});
 initializeSocketIO(io); // Pass the 'io' instance to the handler
 
 const port = Number(process.env.PORT) || 4000;
 
 //routes
-app.use("/api/auth", authRoute);
-
+app.use("/api/auth", authRoutes);
+app.use("/api/socket", socketRoutes);
 // Health check endpoint for uptime monitor
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok" });
 });
 
 // Error Handling Middleware
