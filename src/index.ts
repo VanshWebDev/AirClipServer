@@ -39,6 +39,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/socket", socketRoutes);
 // Health check endpoint for uptime monitor
 app.get("/api/health", (req, res) => {
+  console.log("Health checked ✅");
   res.status(200).json({ status: "ok" });
 });
 
