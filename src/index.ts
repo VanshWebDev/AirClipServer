@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth.route.js";
 import { errHandlerMiddleware } from "./middleware/errHandler.middleware.js";
 import cookieParser from "cookie-parser";
 import socketRoutes from "./routes/socket.route.js";
+import rateLimit from "express-rate-limit";
 dotenv.config();
 
 // Environment variable
@@ -17,6 +18,12 @@ const cookieSecret = process.env.COOKIE_SECRET;
 
 const app = express();
 const server = createServer(app);
+// Set up rate limiter: maximum of 100 requests per 15 minutes per IP
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  message: "Too many requests from this IP, please try again after 15 minutes",
+});
 
 // Connect to Database
 connectDB();
@@ -25,6 +32,7 @@ connectDB();
 app.use(cors(corsOptions));
 app.use(express.json()); // For parsing JSON bodies
 app.use(cookieParser(cookieSecret));
+app.use(limiter);
 //Initialize Socket.IO
 const io = new Server(server, {
   cors: corsOptions,
