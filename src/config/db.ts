@@ -4,6 +4,9 @@ import { Pool, type PoolConfig } from "pg";
 const poolConfig: PoolConfig = process.env.DATABASE_URL
   ? {
       connectionString: process.env.DATABASE_URL,
+      ...(process.env.PGSSL === "true"
+        ? { ssl: { rejectUnauthorized: true } }
+        : {}),
       max: Number(process.env.PG_POOL_MAX ?? 10),
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 5_000,
