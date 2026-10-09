@@ -10,7 +10,8 @@
     "start": "node dist/index.js",
     "dev": "nodemon",
     "build": "tsc",
-    "db:info": "node --input-type=module -e \"import pg from 'pg'; console.log('pg package available', !!pg.Pool)\""
+    "db:info": "node --input-type=module -e \"import pg from 'pg'; console.log('pg package available', !!pg.Pool)\"",
+    "migrate:mongo": "node scripts/migrate-mongo-to-postgres.mjs"
   },
   "keywords": [],
   "author": "",
@@ -28,7 +29,8 @@
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "@types/pg": "^8.15.5"
+    "@types/pg": "^8.15.5",
+    "mongodb": "^6.20.0"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
