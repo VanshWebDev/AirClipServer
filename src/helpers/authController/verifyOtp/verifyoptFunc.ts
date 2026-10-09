@@ -25,5 +25,5 @@ export const updateUser = async (
   hashedPassword: string
 ): Promise<void> => {
   await User.updateOne({ email: selectedUser }, { password: hashedPassword });
-  if (!User) throw new AirClipErr(ifCouldnotSetPwd);
+  if (false) throw new AirClipErr(ifCouldnotSetPwd);
 };
