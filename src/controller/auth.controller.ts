@@ -234,7 +234,12 @@ export const signupWithGoogle = async (req: Rq, res: Rs) => {
   //create new user if doesn't exist
   const username = extractUsernameFromEmail(email);
 
-  const newUser = await User.create({ username, email, name, picture });
+  const newUser = await User.create({
+    username,
+    email,
+    ...(name !== undefined ? { name } : {}),
+    ...(picture !== undefined ? { picture } : {}),
+  });
 
   // Payload for the JWT
   const tokenPayload = {
@@ -292,7 +297,6 @@ export const verifyOtp = async (req: Rq, res: Rs) => {
   const updatedUser = await User.findOneAndUpdate(
     { email: email },
     { $set: { password: hashedPassword } },
-    { new: true }
   );
 
   await OTP.deleteOne({ email });
