@@ -10,7 +10,6 @@
     "start": "node dist/index.js",
     "dev": "nodemon",
     "build": "tsc",
-    "db:info": "node --input-type=module -e \"import pg from 'pg'; console.log('pg package available', !!pg.Pool)\"",
     "migrate:mongo": "node scripts/migrate-mongo-to-postgres.mjs"
   },
   "keywords": [],
