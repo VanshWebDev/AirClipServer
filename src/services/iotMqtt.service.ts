@@ -74,4 +74,4 @@ export const publishLedCommand = (
     if (error) reject(error);
     else resolve();
   });
-};
+});
