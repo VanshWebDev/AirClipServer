@@ -91,7 +91,7 @@ export const User = {
 
   create: async (data: {
     email: string;
-    username: string;
+    username?: string | null;
     password?: string;
     name?: string;
     profilePicture?: string;
