@@ -1,97 +1,95 @@
-import mongoose from "mongoose";
 import { Server, Socket } from "socket.io";
 import { ClipboardItem } from "../models/clipboard.model.js";
 
-// New Map: Stores user details for each socket ID
-// e.g., { 'socketIdABC': { userId: '123', username: 'Vansh' } }
-const socketToUser = new Map<string, { userId: string, username: string, senderDeviceInfo: string }>();
+// Connected user metadata is kept in memory for the current Socket.IO process.
+const socketToUser = new Map<string, { userId: string; username: string; senderDeviceInfo: string }>();
 
 export const initializeSocketIO = (io: Server) => {
-  // Helper function to get a list of user details for a given room
   const getUsersInRoom = (roomName: string) => {
     const room = io.sockets.adapter.rooms.get(roomName);
     if (!room) return [];
 
     return Array.from(room)
-      .map(socketId => socketToUser.get(socketId))
-      .filter(user => user !== undefined); // Filter out any undefined users
+      .map((socketId) => socketToUser.get(socketId))
+      .filter((user) => user !== undefined);
   };
 
   io.on("connection", (socket: Socket) => {
-    console.log(`✅ User connected: ${socket.id}`);
+    console.log("Socket connected:", socket.id);
 
-    // A. When a user registers, store their details and join their personal room
     socket.on("register_user", ({ userId, username, senderDeviceInfo }) => {
+      // User identity is validated by the HTTP auth flow before this client is used.
       socketToUser.set(socket.id, { userId, username, senderDeviceInfo });
       socket.join(userId);
-      console.log(`Socket ${socket.id} (${username}) joined personal room: ${userId}`);
+      console.log("Socket registered:", username);
     });
 
-    // B. When a user joins a custom room
     socket.on("join_room", (roomName: string) => {
-      // Find and leave the previous custom room
-      const previousRoom = Array.from(socket.rooms).find(room => room !== socket.id && !mongoose.Types.ObjectId.isValid(room));
-      if (previousRoom) {
+      if (typeof roomName !== "string" || roomName.length < 1 || roomName.length > 120) return;
+
+      const previousRoom = Array.from(socket.rooms).find(
+        (room) => room !== socket.id && !/^[a-f0-9]{24}$/i.test(room),
+      );
+      if (previousRoom && previousRoom !== roomName) {
         socket.leave(previousRoom);
-        console.log(`Socket ${socket.id} left room: ${previousRoom}`);
-        // Notify the old room that a user has left
-        io.to(previousRoom).emit('update_room_users', getUsersInRoom(previousRoom));
+        io.to(previousRoom).emit("update_room_users", getUsersInRoom(previousRoom));
       }
 
-      // Join the new room
       socket.join(roomName);
-      console.log(`Socket ${socket.id} joined custom room: ${roomName}`);
-      // Notify the new room with the updated list of users
-      io.to(roomName).emit('update_room_users', getUsersInRoom(roomName));
+      io.to(roomName).emit("update_room_users", getUsersInRoom(roomName));
     });
 
-    // C. Handle sending clipboard items
     socket.on("send_clipboard_item", async (item: { content: string; room: string }) => {
-      console.log('working')
-      const { content, room } = item;
       const sender = socketToUser.get(socket.id);
-      if (!sender) return; // Don't process if sender is not registered
-      // --- SAVE TO DATABASE ---
-    const newItem = new ClipboardItem({
-      content,
-      room,
-      senderId: sender.userId,
-      senderUsername: sender.username,
-      senderDeviceInfo: sender.senderDeviceInfo,
+      if (!sender || !item || typeof item.content !== "string" ||
+          typeof item.room !== "string" || item.content.length > 100_000 ||
+          item.room.length < 1 || item.room.length > 120) {
+        return;
+      }
+
+      try {
+        const newItem = new ClipboardItem({
+          content: item.content,
+          room: item.room,
+          senderId: sender.userId,
+          senderUsername: sender.username,
+          senderDeviceInfo: sender.senderDeviceInfo,
+        });
+        await newItem.save();
+
+        io.to(item.room).emit("receive_clipboard_item", {
+          id: newItem._id,
+          _id: newItem._id,
+          content: newItem.content,
+          senderId: socket.id,
+          senderUsername: sender.username || "Anonymous",
+          senderDeviceInfo: sender.senderDeviceInfo,
+          createdAt: newItem.createdAt,
+        });
+      } catch (error) {
+        console.error("Could not persist clipboard item:", error);
+        socket.emit("clipboard_error", { message: "Clipboard item could not be saved." });
+      }
     });
-    await newItem.save();
 
-
-      const messagePayload = {
-        id: newItem._id,
-        content: content,
-        senderId: socket.id,
-        senderUsername: sender?.username || 'Anonymous', // Include username
-        senderDeviceInfo: sender?.senderDeviceInfo,
-      };
-      
-      console.log('working 2')
-      io.to(room).emit("receive_clipboard_item", messagePayload);
+    socket.on("iot:subscribe", (deviceId: unknown) => {
+      if (typeof deviceId !== "string" || !/^TBLS[0-9]{5}$/.test(deviceId)) return;
+      socket.join("iot:" + deviceId);
     });
 
-    // D. When a user disconnects, notify all relevant rooms
     socket.on("disconnecting", () => {
-      // For each room the socket was in...
-      socket.rooms.forEach(room => {
-        // ...if it's not the socket's private ID room...
+      for (const room of socket.rooms) {
         if (room !== socket.id) {
-          // ...get the list of users *after* this socket is removed...
-          const usersInRoom = getUsersInRoom(room).filter(user => user.userId !== socketToUser.get(socket.id)?.userId);
-          // ...and broadcast the new list to that room.
-          socket.to(room).emit('update_room_users', usersInRoom);
+          const userId = socketToUser.get(socket.id)?.userId;
+          const usersInRoom = getUsersInRoom(room).filter((user) => user.userId !== userId);
+          socket.to(room).emit("update_room_users", usersInRoom);
         }
-      });
+      }
     });
-    
+
     socket.on("disconnect", () => {
-      socketToUser.delete(socket.id); // Clean up the user map
-      console.log(`❌ User disconnected: ${socket.id}`);
+      socketToUser.delete(socket.id);
+      console.log("Socket disconnected:", socket.id);
     });
   });
 };
-
