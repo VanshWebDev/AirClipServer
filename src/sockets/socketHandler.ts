@@ -17,9 +17,22 @@ export const initializeSocketIO = (io: Server) => {
   io.on("connection", (socket: Socket) => {
     console.log("Socket connected:", socket.id);
 
-    socket.on("register_user", ({ userId, username, senderDeviceInfo }) => {
-      // User identity is validated by the HTTP auth flow before this client is used.
-      socketToUser.set(socket.id, { userId, username, senderDeviceInfo });
+    socket.on("register_user", ({ senderDeviceInfo }) => {
+      // Never trust identity fields supplied by the browser; the Socket.IO
+      // middleware derives these fields from the signed session cookie.
+      const userId = socket.data.userId as string | undefined;
+      const username = socket.data.username as string | undefined;
+      if (!userId || !username) return;
+
+      const safeDeviceInfo =
+        typeof senderDeviceInfo === "string" && senderDeviceInfo.length <= 40
+          ? senderDeviceInfo
+          : "Unknown";
+      socketToUser.set(socket.id, {
+        userId,
+        username,
+        senderDeviceInfo: safeDeviceInfo,
+      });
       socket.join(userId);
       console.log("Socket registered:", username);
     });
