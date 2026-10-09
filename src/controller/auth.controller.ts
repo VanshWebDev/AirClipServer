@@ -85,13 +85,9 @@ export const login = async (req: Rq, res: Rs) => {
 
   let checkuser;
   if (checkIfMail(emailOrUsername)) {
-    checkuser = await User.findOne({ email: emailOrUsername }).select(
-      "+password"
-    );
+    checkuser = await User.findOneWithPassword({ email: emailOrUsername });
   } else {
-    checkuser = await User.findOne({ affiname: emailOrUsername }).select(
-      "+password"
-    );
+    checkuser = await User.findOneWithPassword({ affiname: emailOrUsername });
   }
 
   if (!checkuser) throw new AirClipErr(ifCheckuserNot);
