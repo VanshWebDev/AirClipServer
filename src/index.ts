@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import connectDB from "./config/db.js";
 import { initializeSocketIO } from "./sockets/socketHandler.js";
+import { authenticateSocket } from "./sockets/socketAuth.js";
 import { setRealtimeServer } from "./services/realtime.service.js";
 import { initializeIotMqtt } from "./services/iotMqtt.service.js";
 import { corsOptions } from "./constant/optionObj/optionObj.js";
@@ -34,6 +35,9 @@ const io = new Server(server, {
   transports: ["websocket", "polling"],
 });
 
+io.use((socket, next) => {
+  void authenticateSocket(socket, next);
+});
 initializeSocketIO(io);
 setRealtimeServer(io);
 initializeIotMqtt(io);
