@@ -1,6 +1,5 @@
 import { type Request, type Response } from "express";
 
-import mongoose from "mongoose";
 import { generateJwtToken } from "./jwt.utils.js";
 import { createCookie } from "../../helpers/authController/signup/signupFunc.js";
 
@@ -22,7 +21,7 @@ import { createCookie } from "../../helpers/authController/signup/signupFunc.js"
 // Define the payload for the JWT token
 interface TokenPayload {
   email: string;
-  _id: string | mongoose.Types.ObjectId;
+  _id: string;
 }
 
 interface otherInfo {

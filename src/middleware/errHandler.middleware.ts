@@ -1,20 +1,32 @@
-import express from "express";
+import type { NextFunction, Request, Response } from "express";
 
-interface CustomError {
+interface CustomError extends Error {
   status?: number;
-  message?: string;
   forFrontend?: boolean;
 }
 
-export const errHandlerMiddleware = async (
+export const errHandlerMiddleware = (
   err: CustomError,
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
+  _req: Request,
+  res: Response,
+  next: NextFunction,
 ) => {
-  const { status = 500, message = "some error occured", forFrontend } = err;
+  if (res.headersSent) return next(err);
 
-  if (forFrontend) res.status(status).json({ message });
-  console.log("🐞 Err Middlaware:", err);
-  next();
+  const requestedStatus = Number(err.status);
+  const status =
+    Number.isInteger(requestedStatus) && requestedStatus >= 400 && requestedStatus <= 599
+      ? requestedStatus
+      : 500;
+
+  console.error("Request failed:", err);
+
+  const message =
+    err.forFrontend && err.message
+      ? err.message
+      : status < 500 && err.message
+        ? err.message
+        : "Internal server error";
+
+  return res.status(status).json({ message });
 };

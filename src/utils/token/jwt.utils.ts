@@ -1,6 +1,5 @@
 import CryptoJS from "crypto-js";
 import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
 
 // .env variables
 const jwtSecret = process.env.JWT_SECRET as string;
@@ -14,7 +13,7 @@ const cryptoSecret = process.env.CRYPTO_SECRET as string;
  */
 export const generateJwtToken = (payload: {
   email: string;
-  _id?: string | mongoose.Types.ObjectId,
+  _id?: string,
 }): string | undefined => {
   if (!jwtSecret || !cryptoSecret) return undefined;
 

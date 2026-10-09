@@ -1,69 +1,73 @@
 import { type Response } from "express";
 import nodemailer from "nodemailer";
+import { randomInt } from "node:crypto";
 import { AirClipErr } from "../error/AirClipErr.js";
 import { OTP } from "../../models/otp.model.js";
 import { sendRes } from "./reusableFunc.js";
 import { resIfEmailSent } from "../../helpers/authController/sendOpt/resObj.js";
 
-export const generateOtp = () => {
-  const otp = Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit OTP
-  return otp;
-};
+export const generateOtp = (): number => randomInt(100000, 1_000_000);
 
 export const sendEmail = async (
-  res: Response,
+  _res: Response,
   email: string,
   otp: number,
-  key: string
+  key: string,
 ): Promise<boolean> => {
-  // Create a transporter object with SMTP settings
-  let transporter = nodemailer.createTransport({
-    service: "Gmail", // Example: Gmail, you can use any email service provider
-    auth: {
-      user: "varsna.service@gmail.com", // Your email
-      // pass: "qudr vvki akbb mrma", // Your email password
-      pass: "xvyc teua csft mxai", // Your email password
-    },
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASSWORD;
+  if (!user || !pass) {
+    throw new AirClipErr({
+      status: 500,
+      message: "SMTP credentials are not configured on the server",
+      forFrontend: false,
+    });
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: Number(process.env.SMTP_PORT || 465),
+    secure: process.env.SMTP_SECURE !== "false",
+    auth: { user, pass },
   });
 
-  let subject = "";
-  // Define the email
-  if (key == "Email verification") subject = "email verification";
-  else if (key == "forgetpassword") subject = "password reset";
+  const subject = key === "Email verification"
+    ? "email verification"
+    : key === "forgetpassword"
+      ? "password reset"
+      : "account verification";
 
-  let mailOptions = {
-    from: "vanshvanshkumar39@gmail.com",
+  const info = await transporter.sendMail({
+    from: process.env.SMTP_FROM || user,
     to: email,
-    subject: `varsna ${subject} OTP`,
-    text: `Your OTP for ${subject} is ${otp}`,
-  };
+    subject: "AirClip " + subject + " OTP",
+    text: "Your OTP for " + subject + " is " + otp + ". It expires in 10 minutes.",
+  });
 
-  // Send the email
-  let info = await transporter.sendMail(mailOptions);
   if (info.accepted.length > 0) return true;
-  else
-    throw new AirClipErr({
-      status: 400,
-      message: "couldn't send otp",
-      forFrontend: true,
-    });
+  throw new AirClipErr({
+    status: 400,
+    message: "Could not send OTP",
+    forFrontend: true,
+  });
 };
 
 export const saveOtp = async (email: string, otp: number) => {
-  await OTP.create({ email, otp }).catch((err: any) => {
-    if (err.code === 11000) {
+  try {
+    await OTP.create({ email, otp });
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    if (code === "23505" || code === "11000") {
       throw new AirClipErr({
         status: 400,
         message: "OTP already sent",
         forFrontend: true,
       });
     }
-  });
+    throw error;
+  }
 };
 
-// This is now your main response helper
-export const sendResponse = (
-  res: Response,
-) => {
-  res.status(200).json(resIfEmailSent);
+export const sendResponse = (_res: Response) => {
+  sendRes(_res, resIfEmailSent);
 };

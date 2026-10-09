@@ -8,13 +8,13 @@ const frontendUrlForDevelopment =
 
 export const corsOptions: CorsOptions = {
   credentials: true,
-  origin: [frontendUrl, frontendUrlForDevelopment,"http://192.168.43.139:5173"],
+  origin: [frontendUrl, frontendUrlForDevelopment, "http://localhost:3000", "http://192.168.43.139:5173"],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
 };
 
 export const socketIoOptions = {
-  origin:[ frontendUrl, "http://192.168.43.139:5173"],
+  origin: [frontendUrl, frontendUrlForDevelopment, "http://localhost:3000", "http://192.168.43.139:5173"],
   methods: ["GET", "POST"],
   credentials: true,
 };
