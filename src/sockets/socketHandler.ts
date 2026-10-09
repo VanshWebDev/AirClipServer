@@ -1,4 +1,4 @@
-import { Server, Socket } from "socket.io";
+import type { Server, Socket } from "socket.io";
 import { ClipboardItem } from "../models/clipboard.model.js";
 
 // Connected user metadata is kept in memory for the current Socket.IO process.
