@@ -6,6 +6,8 @@ export const setRealtimeServer = (server: Server) => {
   socketServer = server;
 };
 
+export const getRealtimeServer = (): Server | null => socketServer;
+
 export const emitToDeviceRoom = (deviceId: string, event: string, payload: unknown) => {
   socketServer?.to("iot:" + deviceId).emit(event, payload);
 };
