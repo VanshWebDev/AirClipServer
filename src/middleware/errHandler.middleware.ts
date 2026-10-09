@@ -2,7 +2,6 @@ import type { NextFunction, Request, Response } from "express";
 
 interface CustomError extends Error {
   status?: number;
-  message?: string;
   forFrontend?: boolean;
 }
 
