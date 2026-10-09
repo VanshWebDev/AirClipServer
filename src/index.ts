@@ -1,60 +1,68 @@
+import "dotenv/config";
 import express from "express";
 import { createServer } from "node:http";
-import dotenv from "dotenv";
 import { Server } from "socket.io";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
 import connectDB from "./config/db.js";
 import { initializeSocketIO } from "./sockets/socketHandler.js";
-import cors from "cors";
+import { setRealtimeServer } from "./services/realtime.service.js";
+import { initializeIotMqtt } from "./services/iotMqtt.service.js";
 import { corsOptions } from "./constant/optionObj/optionObj.js";
 import authRoutes from "./routes/auth.route.js";
-import { errHandlerMiddleware } from "./middleware/errHandler.middleware.js";
-import cookieParser from "cookie-parser";
 import socketRoutes from "./routes/socket.route.js";
-import rateLimit from "express-rate-limit";
-dotenv.config();
-
-// Environment variable
-const cookieSecret = process.env.COOKIE_SECRET;
+import iotRoutes from "./routes/iot.route.js";
+import { errHandlerMiddleware } from "./middleware/errHandler.middleware.js";
 
 const app = express();
 const server = createServer(app);
-// Set up rate limiter: maximum of 100 requests per 15 minutes per IP
+
 const limiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  windowMs: 10 * 60 * 1000,
+  max: 100,
   message: "Too many requests from this IP, please try again after 15 minutes",
 });
 
-// Connect to Database
-connectDB();
-
-// Middlewares
 app.use(cors(corsOptions));
-app.use(express.json()); // For parsing JSON bodies
-app.use(cookieParser(cookieSecret));
+app.use(express.json({ limit: "1mb" }));
+app.use(cookieParser(process.env.COOKIE_SECRET || ""));
 app.use(limiter);
-//Initialize Socket.IO
+
 const io = new Server(server, {
   cors: corsOptions,
   transports: ["websocket", "polling"],
 });
-initializeSocketIO(io); // Pass the 'io' instance to the handler
+
+initializeSocketIO(io);
+setRealtimeServer(io);
+initializeIotMqtt(io);
 
 const port = Number(process.env.PORT) || 4000;
 
-//routes
 app.use("/api/auth", authRoutes);
 app.use("/api/socket", socketRoutes);
-// Health check endpoint for uptime monitor
-app.get("/api/health", (req, res) => {
-  console.log("Health checked ✅");
-  res.status(200).json({ status: "ok" });
+app.use("/api/iot", iotRoutes);
+
+app.get("/api/health", async (_req, res) => {
+  res.status(200).json({
+    status: "ok",
+    database: "postgresql",
+    iotMode: process.env.IOT_MODE === "mqtt" ? "mqtt" : "simulator",
+  });
 });
 
-// Error Handling Middleware
 app.use(errHandlerMiddleware);
 
-server.listen(port, () => {
-  console.log("Welcome to AirClip ☘️");
-  console.log(`Server listening on port ${port}`);
+const startServer = async () => {
+  await connectDB();
+  server.listen(port, () => {
+    console.log("AirClip server started");
+    console.log("Server listening on port " + port);
+  });
+};
+
+void startServer().catch((error: unknown) => {
+  console.error("Server startup failed:", error);
+  process.exit(1);
 });
